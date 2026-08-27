@@ -1,0 +1,26 @@
+{
+	"name": "itx/keep-scroll-position",
+	"type": "typo3-cms-extension",
+	"description": "Restores the scroll position of the TYPO3 backend module body after a full page reload (e.g. after hide/delete/move actions), instead of jumping back to the top.",
+	"version": "1.0.0",
+	"authors": [
+		{
+			"name": "it.x informationssysteme gmbh",
+			"role": "Developer"
+		}
+	],
+	"require": {
+		"typo3/cms-core": "^13.4",
+		"typo3/cms-backend": "^13.4"
+	},
+	"autoload": {
+		"psr-4": {
+			"Itx\\KeepScrollPosition\\": "Classes/"
+		}
+	},
+	"extra": {
+		"typo3/cms": {
+			"extension-key": "keep_scroll_position"
+		}
+	}
+}
