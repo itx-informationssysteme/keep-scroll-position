@@ -24,47 +24,55 @@
 		return moduleName !== null && configured.includes(moduleName)
 	}
 
-	const getScrollContainer = () => document.querySelector('.t3js-module-body')
+	const getScrollContainer = () => {
+		const moduleBody = document.querySelector('.t3js-module-body')
+		if (moduleBody) {
+			const overflowY = getComputedStyle(moduleBody).overflowY
+			if (overflowY === 'auto' || overflowY === 'scroll') {
+				return moduleBody
+			}
+		}
+		return document.scrollingElement || document.documentElement
+	}
 
 	const storageKey = () => STORAGE_KEY_PREFIX + getModuleName()
 
-	const restoreScroll = () => {
-		const stored = window.sessionStorage.getItem(storageKey())
-		if (stored === null) {
-			return
-		}
-		window.sessionStorage.removeItem(storageKey())
-		const container = getScrollContainer()
-		if (container) {
-			container.scrollTop = parseInt(stored, 10) || 0
-		}
-	}
-
-	const rememberScroll = () => {
-		const container = getScrollContainer()
-		window.sessionStorage.setItem(storageKey(), String(container ? container.scrollTop : 0))
-	}
+	let lastScrollTop = 0
 
 	document.addEventListener('DOMContentLoaded', () => {
 		if (!isEnabledForCurrentModule()) {
 			return
 		}
 		const container = getScrollContainer()
-		if (!container) {
+		lastScrollTop = container.scrollTop
+
+		document.addEventListener('scroll', event => {
+			const current = getScrollContainer()
+			if (event.target === current || event.target === document) {
+				lastScrollTop = current.scrollTop
+			}
+		}, true)
+	})
+
+	window.addEventListener('pagehide', () => {
+		if (!isEnabledForCurrentModule()) {
 			return
 		}
-		container.querySelectorAll('a[href]').forEach(link => {
-			link.addEventListener('click', rememberScroll)
-		})
-		container.querySelectorAll('form').forEach(form => {
-			form.addEventListener('submit', rememberScroll)
-		})
+		window.sessionStorage.setItem(storageKey(), String(lastScrollTop))
 	})
 
 	window.addEventListener('load', () => {
 		if (!isEnabledForCurrentModule()) {
 			return
 		}
-		requestAnimationFrame(() => requestAnimationFrame(restoreScroll))
+		const stored = window.sessionStorage.getItem(storageKey())
+		if (stored === null) {
+			return
+		}
+		window.sessionStorage.removeItem(storageKey())
+		requestAnimationFrame(() => requestAnimationFrame(() => {
+			const container = getScrollContainer()
+			container.scrollTo({ top: parseInt(stored, 10) || 0, behavior: 'instant' })
+		}))
 	})
 })()
