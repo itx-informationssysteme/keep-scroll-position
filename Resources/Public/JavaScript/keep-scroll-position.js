@@ -24,7 +24,16 @@
 		return moduleName !== null && configured.includes(moduleName)
 	}
 
-	const getScrollContainer = () => document.scrollingElement || document.documentElement
+	const getScrollContainer = () => {
+		const moduleBody = document.querySelector('.t3js-module-body')
+		if (moduleBody) {
+			const overflowY = getComputedStyle(moduleBody).overflowY
+			if (overflowY === 'auto' || overflowY === 'scroll') {
+				return moduleBody
+			}
+		}
+		return document.scrollingElement || document.documentElement
+	}
 
 	const storageKey = () => STORAGE_KEY_PREFIX + getModuleName()
 
@@ -37,9 +46,12 @@
 		const container = getScrollContainer()
 		lastScrollTop = container.scrollTop
 
-		window.addEventListener('scroll', () => {
-			lastScrollTop = getScrollContainer().scrollTop
-		})
+		document.addEventListener('scroll', event => {
+			const current = getScrollContainer()
+			if (event.target === current || event.target === document) {
+				lastScrollTop = current.scrollTop
+			}
+		}, true)
 	})
 
 	window.addEventListener('pagehide', () => {
